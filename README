@@ -4,6 +4,8 @@ Some software to generate heat maps:
 
 trace2heatmap.pl	converts a trace of per-event latency to an interactive SVG heat map.
 
+See http://dtrace.org/blogs/brendan/2013/05/19/revealing-hidden-latency-patterns
+
 
 trace2heatmap
 =============
