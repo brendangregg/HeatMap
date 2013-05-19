@@ -1,0 +1,102 @@
+HeatMap
+
+Some software to generate heat maps:
+
+trace2heatmap.pl	converts a trace of per-event latency to an interactive SVG heat map.
+
+
+trace2heatmap
+=============
+This is a quick program to generate heat maps from trace files.  I wrote it
+in 3 hours, so it's probably buggy (especially input checking).
+
+It takes input as two numerical columns, a time and a latency. For example:
+
+$ more trace.txt
+17442020318913 8026
+17442020325950 6798
+17442020333082 6907
+17442020339374 6065
+[...]
+
+Each row is an event (eg, an I/O).  The first column is time of the event and
+the second is latency.  In this example, both columns are microseconds.
+See the later Generating Latency Traces section for how to generate these.
+
+This example can converted into an SVG heatmap using:
+
+$ ./trace2heatmap.pl --unitstime=us --unitslatency=us trace.txt > heatmap.svg
+
+Other units can also be used ("ms", "ns").
+
+The y-axis will auto-scale to include everything, including latency outliers.
+While useful, you generally want to generate a second heatmap that excludes
+those so you can study the bulk of the data.  Eg:
+
+$ ./trace2heatmap.pl --unitstime=us --unitslatency=us --maxlat=10000 trace.txt > heatmap2.svg
+
+This limits the latency range to 10000 us.
+
+A --minlat option can also be used.  Run --help for the full list, which
+includes --titletext to customize the title, and --grid to draw grid lines.
+
+trace2heatmap can generate other heat maps, not just latency.
+
+
+Generating Latency Traces
+=========================
+An example trace file is included, example-trace.txt, which was generated
+using a DTrace program called iosnoop (from the DTraceToolkit):
+
+$ ./iosnoop -Dt > out.iosnoop
+$ awk '{ print $1, $2 }' out.iosnoop > example-trace.txt
+
+These are performed as separate steps so that the original iosnoop output can
+be reinspected to see more details if interesting features were found in the
+heat map.  I typically run it with "iosnoop -Dots".  Note that most versions
+of iosnoop need dynvarsize increased to avoid "dynamic variable drops": find
+the line that has "#pragma D option quiet" and add the following line below
+it: "#pragma D option dynvarsize=16m".
+
+Here's an example DTrace one-liner that will generate trace output, both 
+columns in microseconds, for syscall reads:
+
+$ dtrace -qn 'syscall::read:entry { self->ts = timestamp; }
+    syscall::read:return /self->ts/ {
+    printf("%d %d\n", timestamp / 1000, (timestamp - self->ts) / 1000); self->ts = 0; }'
+
+This is system-wide; add a predicate to filter for applications.
+
+I could add more examples, but you probably get the picture: anything that can
+emit times and latency can be processed.
+
+
+Tracing in Production
+=====================
+Tracing per-event latency can be expensive to perform.  DTrace minimizes the
+overheads as much as possible using per-CPU buffers and asynchronous kernel-
+user transfers; other tools (eg, strace, tcpdump) are expected to have higher
+overhead.  This can cause problems for production use: you wan to understand
+the overhead, including when using DTrace, before tracing events.
+
+Heat maps have been used successfully in production -- and recorded at a one
+second granularity 24x7x365 -- by some products built upon DTrace.  These use
+the DTrace aggregating feature to pass a quantized summary of latency to
+user-level, instead of every event, cutting the data transfer down by a
+large factor (eg, 1000x). This summary may consist of a per-second array with
+about 200 elements for different latency ranges, each containing the count of
+events, and is from the DTrace aggregating actions @quantize, @lquantize, or
+@llquantize (best).  This array is then resampled (downsampled) to the
+resolution desired for the heat map (usually down to 30 or so levels).
+Example products that do this are the Oracle ZFS Storage Appliance, and Joyent
+Cloud Analytics.
+
+
+Provided Example
+================
+An example output is included of a disk I/O trace, and the resulting heat map.
+You can generate it using:
+
+$ ./trace2heatmap.pl --unitstime=us --unitslatency=us --maxlat=2000 --grid example-trace.txt > example-heatmap.svg 
+
+This excluded outliers, so that the bulk of the I/O could be examined.
