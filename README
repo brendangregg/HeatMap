@@ -40,7 +40,9 @@ This limits the latency range to 10000 us.
 A --minlat option can also be used.  Run --help for the full list, which
 includes --titletext to customize the title, and --grid to draw grid lines.
 
-trace2heatmap can generate other heat maps, not just latency.
+trace2heatmap can generate other heat maps, not just latency.  As an example of
+another type, see the utilization heat map in:
+http://dtrace.org/blogs/brendan/2011/12/18/visualizing-device-utilization
 
 
 Generating Latency Traces
