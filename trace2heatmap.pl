@@ -6,13 +6,7 @@
 #
 # USAGE: ./trace2heatmap.pl [options] trace.txt > heatmap.svg
 #
-# If your input file needs some massaging, you can pipe from grep/sed/awk:
-#
-#	awk '...' raw.txt | ./trace2heatmap.pl [options] > heatmap.svg
-#
-# Options are listed in the usage message (--help).
-#
-# The input is two numerical columns, a time and a latency. For example:
+# The input trace.txt is two numerical columns, a time and a latency. eg:
 #
 #	$ more trace.txt
 #	17442020318913 8026
@@ -21,9 +15,18 @@
 #	17442020339374 6065
 #	[...]
 #
-# In this example, both columns are in units of microseconds (us).  The options
-# --unitstime=us and --unitslatency=us can be used, so that the time can be
-# processed properly, and latency labeled.
+# If these columns were in microseconds, it could be processed using:
+#
+# ./trace2heatmap.pl --unitstime=us --unitslatency=us trace.txt > heatmap.svg
+#
+# --unitstime is necessary to set for the x-axis (columns). --unitstime is
+# optional for the y-axis (labels).
+#
+# If your input file needs some massaging, you can pipe from grep/sed/awk:
+#
+#	awk '...' raw.txt | ./trace2heatmap.pl [options] > heatmap.svg
+#
+# Options are listed in the usage message (--help).
 #
 # The input may be other event types: eg, utilization, offset, I/O size.  The
 # --title can be changed to reflect the type shown.
@@ -88,7 +91,7 @@ GetOptions(
     'minlat=i'       => \$min_lat,
     'maxlat=i'       => \$max_lat,
     'steplat=i'      => \$step_lat,
-    'stepsec=i'      => \$step_sec,
+    'stepsec=f'      => \$step_sec,
     'rows=i'         => \$rows,
     'maxcol=i'       => \$max_col,
     'title=s'        => \$titletext,
@@ -106,7 +109,7 @@ USAGE: $0 [options] infile > outfile.svg\n
 	--rows			# number of heat map rows (default 50)
 	--steplat		# instead of --rows, you can specify a latency
 				  step, from which row count is automatic.
-	--stepsec		# seconds per column
+	--stepsec		# seconds per column (fractions ok)
 	--maxcol		# maximum number of columns to draw (truncate)
 	--fonttype		# font type (default "Verdana")
 	--fontsize		# font size (default 12)
@@ -236,8 +239,7 @@ foreach my $line (@lines) {
 	next if !defined $latency or $latency eq "";
 	next if $latency < $min_lat;
 	next if defined $max_lat and $latency > $max_lat;
-	my $sec = int(($time - $start_time) / $timefactor);
-	my $col = int($sec / $step_sec);
+	my $col = int((($time - $start_time) / $timefactor) / $step_sec);
 	next if defined $max_col and $col > $max_col;
 	my $lat = int(($latency - $min_lat) / $step_lat);
 	$map[$col][$lat]++;
