@@ -261,7 +261,10 @@ my $inc = <<INC;
 <![CDATA[
 	var details;
 	function init(evt) { details = document.getElementById("details").firstChild; }
-	function s(s, l, c) { details.nodeValue = "time " + s + "s, range " + l + ", count: " + c; }
+	function s(s, l, c, total) {
+		var pct = Math.floor(c / total * 100);
+		details.nodeValue = "time " + s + "s, range " + l + ", count: " + c + ", pct: " + pct + "%";
+	}
 	function c() { details.nodeValue = ' '; }
 ]]>
 </script>
@@ -298,6 +301,12 @@ if ($grid) {
 # Draw boxes
 debug "Writing SVG.\n";
 for (my $s = 0; $s < $largest_col; $s++) {
+	my $total = 0;
+	for (my $l = 0; $l < $largest_row; $l++) {
+		my $c = $map[$s][$l];
+		next unless defined $c;
+		$total += $c;
+	}
 	for (my $l = 0; $l < $largest_row; $l++) {
 		my $c = $map[$s][$l];
 		$c = 0 unless defined $c;
@@ -312,7 +321,7 @@ for (my $s = 0; $s < $largest_col; $s++) {
 		my $tr = $s * $step_sec;
 		$tr .= "-" . ($s * $step_sec - 1 + $step_sec) if $step_sec > 1;
 		$im->filledRectangle($x1, $y1, $x2, $y2, $color,
-		    'onmouseover="s(' . "'$tr','$lr',$c" . ')" onmouseout="c()"');
+		    'onmouseover="s(' . "'$tr','$lr',$c,$total" . ')" onmouseout="c()"');
 	}
 }
 
