@@ -6,13 +6,7 @@
 #
 # USAGE: ./trace2heatmap.pl [options] trace.txt > heatmap.svg
 #
-# If your input file needs some massaging, you can pipe from grep/sed/awk:
-#
-#	awk '...' raw.txt | ./trace2heatmap.pl [options] > heatmap.svg
-#
-# Options are listed in the usage message (--help).
-#
-# The input is two numerical columns, a time and a latency. For example:
+# The input trace.txt is two numerical columns, a time and a latency. eg:
 #
 #	$ more trace.txt
 #	17442020318913 8026
@@ -21,9 +15,18 @@
 #	17442020339374 6065
 #	[...]
 #
-# In this example, both columns are in units of microseconds (us).  The options
-# --unitstime=us and --unitslatency=us can be used, so that the time can be
-# processed properly, and latency labeled.
+# If these columns were in microseconds, it could be processed using:
+#
+# ./trace2heatmap.pl --unitstime=us --unitslatency=us trace.txt > heatmap.svg
+#
+# --unitstime is necessary to set for the x-axis (columns). --unitstime is
+# optional for the y-axis (labels).
+#
+# If your input file needs some massaging, you can pipe from grep/sed/awk:
+#
+#	awk '...' raw.txt | ./trace2heatmap.pl [options] > heatmap.svg
+#
+# Options are listed in the usage message (--help).
 #
 # The input may be other event types: eg, utilization, offset, I/O size.  The
 # --title can be changed to reflect the type shown.
@@ -88,7 +91,7 @@ GetOptions(
     'minlat=i'       => \$min_lat,
     'maxlat=i'       => \$max_lat,
     'steplat=i'      => \$step_lat,
-    'stepsec=i'      => \$step_sec,
+    'stepsec=f'      => \$step_sec,
     'rows=i'         => \$rows,
     'maxcol=i'       => \$max_col,
     'title=s'        => \$titletext,
@@ -106,7 +109,7 @@ USAGE: $0 [options] infile > outfile.svg\n
 	--rows			# number of heat map rows (default 50)
 	--steplat		# instead of --rows, you can specify a latency
 				  step, from which row count is automatic.
-	--stepsec		# seconds per column
+	--stepsec		# seconds per column (fractions ok)
 	--maxcol		# maximum number of columns to draw (truncate)
 	--fonttype		# font type (default "Verdana")
 	--fontsize		# font size (default 12)
@@ -236,8 +239,7 @@ foreach my $line (@lines) {
 	next if !defined $latency or $latency eq "";
 	next if $latency < $min_lat;
 	next if defined $max_lat and $latency > $max_lat;
-	my $sec = int(($time - $start_time) / $timefactor);
-	my $col = int($sec / $step_sec);
+	my $col = int((($time - $start_time) / $timefactor) / $step_sec);
 	next if defined $max_col and $col > $max_col;
 	my $lat = int(($latency - $min_lat) / $step_lat);
 	$map[$col][$lat]++;
@@ -259,7 +261,12 @@ my $inc = <<INC;
 <![CDATA[
 	var details;
 	function init(evt) { details = document.getElementById("details").firstChild; }
-	function s(s, l, c) { details.nodeValue = "time " + s + "s, range " + l + ", count: " + c; }
+	function s(s, l, c, acc, total) {
+		var pct = Math.floor(c / total * 100);
+		var apct = Math.floor(acc / total * 100);
+
+		details.nodeValue = "time " + s + "s, range " + l + ", count: " + c + ", pct: " + pct + "%, acc: " + acc + ", acc pct: " + apct + "%";
+	}
 	function c() { details.nodeValue = ' '; }
 ]]>
 </script>
@@ -296,10 +303,18 @@ if ($grid) {
 # Draw boxes
 debug "Writing SVG.\n";
 for (my $s = 0; $s < $largest_col; $s++) {
+	my $acc = 0;
+	my $total = 0;
+	for (my $l = 0; $l < $largest_row; $l++) {
+		my $c = $map[$s][$l];
+		next unless defined $c;
+		$total += $c;
+	}
 	for (my $l = 0; $l < $largest_row; $l++) {
 		my $c = $map[$s][$l];
 		$c = 0 unless defined $c;
 		next if $c == 0;
+		$acc += $c;
 		my $color = color("linear", $c / $largest_count);
 		my $x1 = $xpad + $s * $boxsize;
 		my $x2 = $x1 + $boxsize;
@@ -310,7 +325,7 @@ for (my $s = 0; $s < $largest_col; $s++) {
 		my $tr = $s * $step_sec;
 		$tr .= "-" . ($s * $step_sec - 1 + $step_sec) if $step_sec > 1;
 		$im->filledRectangle($x1, $y1, $x2, $y2, $color,
-		    'onmouseover="s(' . "'$tr','$lr',$c" . ')" onmouseout="c()"');
+		    'onmouseover="s(' . "'$tr','$lr',$c,$acc,$total" . ')" onmouseout="c()"');
 	}
 }
 
