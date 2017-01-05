@@ -221,7 +221,7 @@ foreach my $line (@lines) {
 	$largest_latency = $latency if $latency > $largest_latency;
 }
 debug "Input start/end times: $start_time/$end_time\n";
-if ((($end_time - $start_time) / $timefactor) > $limit_col) {
+if ((($end_time - $start_time) / $timefactor / $step_sec) > $limit_col) {
 	die "Too many columns (>$limit_col); try setting --unitstime ?";
 }
 $max_lat ||= $largest_latency;
