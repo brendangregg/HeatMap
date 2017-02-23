@@ -100,7 +100,7 @@ GetOptions(
     'grid'           => \$grid
 ) or die <<USAGE_END;
 USAGE: $0 [options] infile > outfile.svg\n
-	--titletext		# change title text
+	--title			# change title text
 	--unitstime		# column 1 units: "s" (default), "ms", "us",
 				  or "ns".
 	--unitslatency		# column 2 units (any string; used for labels)
