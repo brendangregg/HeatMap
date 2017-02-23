@@ -27,7 +27,7 @@ See the later Generating Latency Traces section for how to generate these.
 
 This example can converted into an SVG heatmap using:
 
-$ ./trace2heatmap.pl --unitstime=us --unitslatency=us trace.txt > heatmap.svg
+$ ./trace2heatmap.pl --unitstime=us --unitslabel=us trace.txt > heatmap.svg
 
 Other units can also be used ("ms", "ns").
 
@@ -35,7 +35,7 @@ The y-axis will auto-scale to include everything, including latency outliers.
 While useful, you generally want to generate a second heatmap that excludes
 those so you can study the bulk of the data.  Eg:
 
-$ ./trace2heatmap.pl --unitstime=us --unitslatency=us --maxlat=10000 trace.txt > heatmap2.svg
+$ ./trace2heatmap.pl --unitstime=us --unitslabel=us --maxlat=10000 trace.txt > heatmap2.svg
 
 This limits the latency range to 10000 us.
 
@@ -111,6 +111,6 @@ Provided Example
 An example output is included of a disk I/O trace, and the resulting heat map.
 You can generate it using:
 
-$ ./trace2heatmap.pl --unitstime=us --unitslatency=us --maxlat=2000 --grid example-trace.txt > example-heatmap.svg 
+$ ./trace2heatmap.pl --unitstime=us --unitslabel=us --maxlat=2000 --grid example-trace.txt > example-heatmap.svg 
 
 This excluded outliers, so that the bulk of the I/O could be examined.
