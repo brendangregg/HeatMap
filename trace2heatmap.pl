@@ -1,8 +1,9 @@
 #!/usr/bin/perl -w
 #
-# trace2heatmap.pl 	Generate a heat map SVG from a trace of event latency.
+# trace2heatmap.pl 	Generate a heat map SVG from a trace of events.
 #
-# This is a quick program to prototype heat maps.
+# This is a quick program to prototype heat maps, such as latency, utilization,
+# or sub-second offset. See http://www.brendangregg.com/heatmaps.html.
 #
 # USAGE: ./trace2heatmap.pl [options] trace.txt > heatmap.svg
 #
@@ -17,7 +18,7 @@
 #
 # If these columns were in microseconds, it could be processed using:
 #
-# ./trace2heatmap.pl --unitstime=us --unitslatency=us trace.txt > heatmap.svg
+# ./trace2heatmap.pl --unitstime=us --unitslabel=us trace.txt > heatmap.svg
 #
 # --unitstime is necessary to set for the x-axis (columns). --unitstime is
 # optional for the y-axis (labels).
@@ -71,6 +72,7 @@ my $boxsize = 8;		# height and width of boxes
 my $fontsize = 12;		# base text size
 my $titletext = "Latency Heat Map";     # centered heading
 my $xaxistext = "Time";         # centered heading
+my $minwidth = 500;		# minimum x size of image
 my $rows = 50;			# number of latency rows
 my $max_col;			# max column to draw
 my $step_lat;			# instead of rows, use fixed latency step
@@ -83,6 +85,7 @@ my $timefactor = 1;		# divisor for time column
 my $limit_col = 10000;		# max permitted columns
 my $debugmsg = 0;		# print debug messages
 my $grid = 0;			# draw grid lines
+my $accstats = 0;		# include accumulated stats
 
 GetOptions(
     'fonttype=s'     => \$fonttype,
@@ -95,15 +98,16 @@ GetOptions(
     'rows=i'         => \$rows,
     'maxcol=i'       => \$max_col,
     'title=s'        => \$titletext,
-    'unitslatency=s' => \$units_lat,
+    'unitslabel=s'   => \$units_lat,
     'unitstime=s'    => \$units_time,
+    'accstats'       => \$accstats,
     'grid'           => \$grid
 ) or die <<USAGE_END;
 USAGE: $0 [options] infile > outfile.svg\n
 	--title			# change title text
 	--unitstime		# column 1 units: "s" (default), "ms", "us",
 				  or "ns".
-	--unitslatency		# column 2 units (any string; used for labels)
+	--unitslabel		# column 2 units (any string; used for labels)
 	--minlat		# minimum latency to include
 	--maxlat		# maximum latency to include
 	--rows			# number of heat map rows (default 50)
@@ -114,9 +118,10 @@ USAGE: $0 [options] infile > outfile.svg\n
 	--fonttype		# font type (default "Verdana")
 	--fontsize		# font size (default 12)
 	--boxsize		# heat map box size in pixels (default 8)
+	--accstats		# show per-column accumulated statistics
 	--grid			# draw grid lines
     eg,
-	$0 --unitstime=us --unitslatency=us --minlat=2000 --maxlat=10000 \\
+	$0 --unitstime=us --unitslabel=us --minlat=2000 --maxlat=10000 \\
 	    trace.txt > heatmap.svg
 USAGE_END
 
@@ -148,6 +153,7 @@ if (defined $units_time) {
 <?xml version="1.0" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" width="$w" height="$h" onload="init(evt)" viewBox="0 0 $w $h" xmlns="http://www.w3.org/2000/svg" >
+<!-- Heat map visualization. See https://github.com/brendangregg/HeatMap for latest version, and http://www.brendangregg.com/heatmaps.html for examples. -->
 SVG
 	}
 
@@ -247,6 +253,7 @@ foreach my $line (@lines) {
 	$largest_count = $map[$col][$lat] if $map[$col][$lat] > $largest_count;
 }
 my $imagewidth ||= $largest_col * $boxsize + $xpad * 2;
+$imagewidth = $minwidth if $imagewidth < $minwidth;
 my $imageheight ||= int(($max_lat - $min_lat) / $step_lat) * $boxsize + $ypad1 + $ypad2;
 
 # Draw canvas
@@ -265,7 +272,11 @@ my $inc = <<INC;
 		var pct = Math.floor(c / total * 100);
 		var apct = Math.floor(acc / total * 100);
 
-		details.nodeValue = "time " + s + "s, range " + l + ", count: " + c + ", pct: " + pct + "%, acc: " + acc + ", acc pct: " + apct + "%";
+		if ($accstats == 1) {
+			details.nodeValue = "time " + s + "s, range " + l + ", count: " + c + ", colpct: " + pct + "%, acc: " + acc + ", acc pct: " + apct + "%";
+		} else {
+			details.nodeValue = "time " + s + "s, range " + l + ", count: " + c + ", colpct: " + pct + "%";
+		}
 	}
 	function c() { details.nodeValue = ' '; }
 ]]>
