@@ -113,7 +113,7 @@ my $idle_regexp = qr/(cpu_idle|cpu_bringup_and_idle|native_safe_halt|xen_hyperca
 
 my ($line, $next, $ts);
 my @stack;
-my $epoch = -1;
+my $start = -1;
 
 while (1) {
 	undef $next;
@@ -125,7 +125,7 @@ haveline:
 	if ($line =~ $event_regexp) {
 		$ts = $1;
 
-		$epoch = $ts if $epoch == -1;
+		$start = $ts if $start == -1;
 
 		# attempt to pull in stack:
 		@stack = ();
@@ -149,9 +149,9 @@ process:
 	}
 
 	if ($timezero) {
-		$ts -= $epoch;
+		$ts -= $start;
 	} elsif ($timezerosecs) {
-		$ts -= floor($epoch);
+		$ts -= floor($start);
 	}
 	if ($ms) {
 		$ts = sprintf("%.3f", $ts);
