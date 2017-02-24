@@ -290,7 +290,7 @@ my ($white, $black, $vvdgrey, $dgrey, $grey) = (
 	$im->colorAllocate(190, 190, 190),
 	$im->colorAllocate(230, 230, 230),
     );
-$im->filledRectangle(0, 0, $imagewidth, $imageheight, $white);
+$im->filledRectangle(0, 0, $imagewidth, $imageheight, $white, 'id="bkg"');
 $im->stringTTF($black, $fonttype, $fontsize + 5, 0.0, int($imagewidth / 2), $fontsize * 2, $titletext, "middle");
 $im->stringTTF($black, $fonttype, $fontsize, 0.0, int($imagewidth / 2), $imageheight - $fontsize - 1, $xaxistext);
 $im->stringTTF($black, $fonttype, $fontsize, 0.0, $xpad, $imageheight - (2.5 * $fontsize), " ", "", 'id="details"');
