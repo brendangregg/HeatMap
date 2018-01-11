@@ -267,15 +267,19 @@ my $inc = <<INC;
 <script type="text/ecmascript">
 <![CDATA[
 	var details;
+	function dateFormat(ts) {
+		var d = new Date(ts*1000);
+		return d.toISOString();
+	}
 	function init(evt) { details = document.getElementById("details").firstChild; }
-	function s(s, l, c, acc, total) {
+	function s(s, l, c, acc, total, timestamp) {
 		var pct = Math.floor(c / total * 100);
 		var apct = Math.floor(acc / total * 100);
 
 		if ($accstats == 1) {
-			details.nodeValue = "time " + s + "s, range " + l + ", count: " + c + ", colpct: " + pct + "%, acc: " + acc + ", acc pct: " + apct + "%";
+			details.nodeValue = "timestamp " + dateFormat(timestamp) + ", time " + s + "s, range " + l + ", count: " + c + ", colpct: " + pct + "%, acc: " + acc + ", acc pct: " + apct + "%";
 		} else {
-			details.nodeValue = "time " + s + "s, range " + l + ", count: " + c + ", colpct: " + pct + "%";
+			details.nodeValue = "timestamp " + dateFormat(timestamp) + ", time " + s + "s, range " + l + ", count: " + c + ", colpct: " + pct + "%";
 		}
 	}
 	function c() { details.nodeValue = ' '; }
@@ -334,9 +338,10 @@ for (my $s = 0; $s < $largest_col; $s++) {
 		my $lr = ($min_lat + $l * $step_lat) . "-" .
 		    ($min_lat + (($l + 1) * $step_lat)) . $units_lat;
 		my $tr = $s * $step_sec;
+		my $timestamp = $start_time + $s * $step_sec;
 		$tr .= "-" . ($s * $step_sec - 1 + $step_sec) if $step_sec > 1;
 		$im->filledRectangle($x1, $y1, $x2, $y2, $color,
-		    'onmouseover="s(' . "'$tr','$lr',$c,$acc,$total" . ')" onmouseout="c()"');
+		    'onmouseover="s(' . "'$tr','$lr',$c,$acc,$total,$timestamp" . ')" onmouseout="c()"');
 	}
 }
 
