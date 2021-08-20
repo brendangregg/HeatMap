@@ -213,6 +213,14 @@ sub debug {
 	print STDERR @_ if $debugmsg;
 }
 
+sub ceil {
+	my $num = shift;
+	my $val = 0;
+
+	$val = 1 if($num > 0 and $num != int($num));
+	return int($num + $val);
+}
+
 # Parse input
 my @lines = <>;
 shift @lines if $lines[0] =~ m/[a-zA-Z]/;	# remove header
@@ -231,7 +239,7 @@ if ((($end_time - $start_time) / $timefactor / $step_sec) > $limit_col) {
 	die "Too many columns (>$limit_col); try setting --unitstime ?";
 }
 $max_lat ||= $largest_latency;
-$step_lat ||= int(($max_lat - $min_lat) / $rows);
+$step_lat ||= ceil(($max_lat - $min_lat) / $rows);
 die "Row resolution too high" if $step_lat == 0;
 
 # Build map
@@ -252,9 +260,9 @@ foreach my $line (@lines) {
 	$largest_col = $col if $col > $largest_col;
 	$largest_count = $map[$col][$lat] if $map[$col][$lat] > $largest_count;
 }
-my $imagewidth ||= $largest_col * $boxsize + $xpad * 2;
+my $imagewidth ||= ($largest_col + 1) * $boxsize + $xpad * 2;
 $imagewidth = $minwidth if $imagewidth < $minwidth;
-my $imageheight ||= int(($max_lat - $min_lat) / $step_lat) * $boxsize + $ypad1 + $ypad2;
+my $imageheight ||= ceil(($max_lat - $min_lat) / $step_lat) * $boxsize + $ypad1 + $ypad2;
 
 # Draw canvas
 debug "Creating image, height/width: $imageheight, $imagewidth\n";
@@ -299,29 +307,32 @@ $im->stringTTF($black, $fonttype, $fontsize, 0.0, $xpad, $imageheight - (2.5 * $
 my $largest_row = int(($max_lat - $min_lat) / $step_lat);
 my ($ytop, $ybot);
 if ($grid) {
-	$ytop = $imageheight - ($ypad2 + $largest_row * $boxsize - $boxsize);
+	$ytop = $imageheight - ($ypad2 + ($largest_row + 1) * $boxsize - $boxsize);
 	$ybot = $imageheight - $ypad2 + $boxsize;
-	$im->line($xpad, $ybot, $xpad + $largest_col * $boxsize, $ybot, $grey);
-	$im->line($xpad, $ytop, $xpad + $largest_col * $boxsize, $ytop, $grey);
+	for (my $c = $ybot; $c > $ytop; $c -= $boxsize * 10) {
+		$im->line($xpad, $c, $xpad + ($largest_col + 1) * $boxsize, $c, $grey);
+	}
+	$im->line($xpad, $ytop, $xpad + ($largest_col + 1) * $boxsize, $ytop, $grey);
 	for (my $s = 0; $s < $largest_col; $s += 10) {
 		my $x = $xpad + $s * $boxsize;
 		$im->line($x, $ybot, $x, $ytop, $grey);
 		my $slabel = ($s * $step_sec) . "s";
 		$im->stringTTF($dgrey, $fonttype, $fontsize, 0.0, $x, $ybot + $fontsize, $slabel);
 	}
+	$im->line($xpad + ($largest_col + 1) * $boxsize, $ybot, $xpad + ($largest_col + 1) * $boxsize, $ytop, $grey);
 }
 
 # Draw boxes
 debug "Writing SVG.\n";
-for (my $s = 0; $s < $largest_col; $s++) {
+for (my $s = 0; $s <= $largest_col; $s++) {
 	my $acc = 0;
 	my $total = 0;
-	for (my $l = 0; $l < $largest_row; $l++) {
+	for (my $l = 0; $l <= $largest_row; $l++) {
 		my $c = $map[$s][$l];
 		next unless defined $c;
 		$total += $c;
 	}
-	for (my $l = 0; $l < $largest_row; $l++) {
+	for (my $l = 0; $l <= $largest_row; $l++) {
 		my $c = $map[$s][$l];
 		$c = 0 unless defined $c;
 		next if $c == 0;
