@@ -335,14 +335,18 @@ for (my $s = 0; $s < $largest_col; $s++) {
 }
 
 # Draw grid lines
-my ($ytop, $ybot);
+my ($ytop, $ybot, $ydiff, $latdiff);
 if ($grid) {
 	$ytop = $imageheight - ($ypad2 + ($largest_row+1) * $boxsize - $boxsize);
 	$ybot = $imageheight - $ypad2 + $boxsize;
+	$ydiff = $ybot - $ytop;
+	$latdiff = $max_lat - $min_lat;
 	$im->line($xpad, $ybot, $xpad + $largest_col * $boxsize, $ybot, $grey);
 	$im->line($xpad, $ytop, $xpad + $largest_col * $boxsize, $ytop, $grey);
 	for (my $c = $ybot; $c > $ytop; $c -= $boxsize * 10) {
 		$im->line($xpad, $c, $xpad + ($largest_col + 1) * $boxsize, $c, $grey);
+		my $y = sprintf("%.3f", $max_lat - $latdiff * (($c-$ytop) / ($ydiff)));
+		$im->stringTTF($vvdgrey, $fonttype, $fontsize, 0.0, $xpad + 5, $c - $fontsize + 6, $y . $units_time);
 	}
 	$im->line($xpad, $ytop, $xpad + ($largest_col + 1) * $boxsize, $ytop, $grey);
 	my $prev_date;
@@ -358,22 +362,16 @@ if ($grid) {
 			# print the date underneath when it changes
 			my $current_date = $s_datetime->ymd;
 			if (!defined $prev_date or $prev_date ne $current_date) {
-				$im->stringTTF($dgrey, $fonttype, $fontsize, 0.0, $x, $ybot + (2*$fontsize), $current_date);
+				$im->stringTTF($vvdgrey, $fonttype, $fontsize, 0.0, $x, $ybot + (2*$fontsize), $current_date);
 			}
 			$prev_date = $current_date;
 		} else {
 			$s_label = $s * $step_sec . "s";
 		}
-		$im->stringTTF($dgrey, $fonttype, $fontsize, 0.0, $x, $ybot + $fontsize, $s_label);
+		$im->stringTTF($vvdgrey, $fonttype, $fontsize, 0.0, $x, $ybot + $fontsize, $s_label);
 	}
 	$im->line($xpad + ($largest_col + 1) * $boxsize, $ybot, $xpad + ($largest_col + 1) * $boxsize, $ytop, $grey);
 
-}
-
-
-if ($grid) {
-	$im->stringTTF($vvdgrey, $fonttype, $fontsize, 0.0, $xpad + 5, $ybot - $fontsize + 4, $min_lat . $units_lat);
-	$im->stringTTF($vvdgrey, $fonttype, $fontsize, 0.0, $xpad + 5, $ytop + $fontsize + 4, $max_lat . $units_lat);
 }
 
 print $im->svg;
