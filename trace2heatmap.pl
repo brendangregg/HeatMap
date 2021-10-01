@@ -88,18 +88,18 @@ my $grid = 0;			# draw grid lines
 my $accstats = 0;		# include accumulated stats
 
 GetOptions(
+	'title=s'        => \$titletext,
+	'unitstime=s'    => \$units_time,
+    'unitslabel=s'   => \$units_lat,
+	'minlat=i'       => \$min_lat,
+    'maxlat=i'       => \$max_lat,
+	'rows=i'         => \$rows,
+	'steplat=i'      => \$step_lat,
+    'stepsec=f'      => \$step_sec,
+	'maxcol=i'       => \$max_col,
     'fonttype=s'     => \$fonttype,
     'fontsize=i'     => \$fontsize,
     'boxsize=i'      => \$boxsize,
-    'minlat=i'       => \$min_lat,
-    'maxlat=i'       => \$max_lat,
-    'steplat=i'      => \$step_lat,
-    'stepsec=f'      => \$step_sec,
-    'rows=i'         => \$rows,
-    'maxcol=i'       => \$max_col,
-    'title=s'        => \$titletext,
-    'unitslabel=s'   => \$units_lat,
-    'unitstime=s'    => \$units_time,
     'accstats'       => \$accstats,
     'grid'           => \$grid
 ) or die <<USAGE_END;
