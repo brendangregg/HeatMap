@@ -341,14 +341,22 @@ if ($grid) {
 	$ybot = $imageheight - $ypad2 + $boxsize;
 	$ydiff = $ybot - $ytop;
 	$latdiff = $max_lat - $min_lat;
-	$im->line($xpad, $ybot, $xpad + $largest_col * $boxsize, $ybot, $grey);
-	$im->line($xpad, $ytop, $xpad + $largest_col * $boxsize, $ytop, $grey);
+
+	# bottom line
+	$im->line($xpad, $ybot, $xpad + ($largest_col + 1) * $boxsize, $ybot, $grey);
+	# top line
+	$im->line($xpad, $ytop, $xpad + ($largest_col + 1) * $boxsize, $ytop, $grey);
+	# right line
+	$im->line($xpad + ($largest_col + 1) * $boxsize, $ybot, $xpad + ($largest_col + 1) * $boxsize, $ytop, $grey);
+
+	# y-axis (horizontal) lines/labels
 	for (my $c = $ybot; $c > $ytop; $c -= $boxsize * 10) {
 		$im->line($xpad, $c, $xpad + ($largest_col + 1) * $boxsize, $c, $grey);
 		my $y = sprintf("%.3f", $max_lat - $latdiff * (($c-$ytop) / ($ydiff)));
 		$im->stringTTF($vvdgrey, $fonttype, $fontsize, 0.0, $xpad + 5, $c - $fontsize + 6, $y . $units_time);
 	}
-	$im->line($xpad, $ytop, $xpad + ($largest_col + 1) * $boxsize, $ytop, $grey);
+
+	# x-axis (vertical) lines/labels
 	my $prev_date;
 	for (my $s = 0; $s < $largest_col; $s += 10) {
 		my $x = $xpad + $s * $boxsize;
@@ -370,8 +378,6 @@ if ($grid) {
 		}
 		$im->stringTTF($vvdgrey, $fonttype, $fontsize, 0.0, $x, $ybot + $fontsize, $s_label);
 	}
-	$im->line($xpad + ($largest_col + 1) * $boxsize, $ybot, $xpad + ($largest_col + 1) * $boxsize, $ytop, $grey);
-
 }
 
 print $im->svg;
