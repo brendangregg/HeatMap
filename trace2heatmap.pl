@@ -285,6 +285,12 @@ my $inc = <<INC;
 		} else {
 			details.nodeValue = "time " + s + "s, range " + l + ", count: " + c + ", colpct: " + pct + "%";
 		}
+		var details_ele = document.getElementById("details");
+		details_ele.setAttribute("x", parseInt(s) / $step_sec * $boxsize + $xpad);
+		if (Math.round(details_ele.getAttribute("x")) + Math.round(details_ele.getComputedTextLength()) <= $imagewidth)
+			details_ele.setAttribute("text-anchor", "start");
+		else
+			details_ele.setAttribute("text-anchor", "end");
 	}
 	function c() { details.nodeValue = ' '; }
 ]]>
