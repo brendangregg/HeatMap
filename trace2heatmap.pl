@@ -299,16 +299,22 @@ $im->stringTTF($black, $fonttype, $fontsize, 0.0, $xpad, $imageheight - (2.5 * $
 my $largest_row = int(($max_lat - $min_lat) / $step_lat);
 my ($ytop, $ybot);
 if ($grid) {
-	$ytop = $imageheight - ($ypad2 + $largest_row * $boxsize - $boxsize);
+	$ytop = $imageheight - ($ypad2 + ($largest_row+1) * $boxsize - $boxsize);
 	$ybot = $imageheight - $ypad2 + $boxsize;
 	$im->line($xpad, $ybot, $xpad + $largest_col * $boxsize, $ybot, $grey);
 	$im->line($xpad, $ytop, $xpad + $largest_col * $boxsize, $ytop, $grey);
+	for (my $c = $ybot; $c > $ytop; $c -= $boxsize * 10) {
+		$im->line($xpad, $c, $xpad + ($largest_col + 1) * $boxsize, $c, $grey);
+	}
+	$im->line($xpad, $ytop, $xpad + ($largest_col + 1) * $boxsize, $ytop, $grey);
 	for (my $s = 0; $s < $largest_col; $s += 10) {
 		my $x = $xpad + $s * $boxsize;
 		$im->line($x, $ybot, $x, $ytop, $grey);
 		my $slabel = ($s * $step_sec) . "s";
 		$im->stringTTF($dgrey, $fonttype, $fontsize, 0.0, $x, $ybot + $fontsize, $slabel);
 	}
+	$im->line($xpad + ($largest_col + 1) * $boxsize, $ybot, $xpad + ($largest_col + 1) * $boxsize, $ytop, $grey);
+
 }
 
 # Draw boxes
