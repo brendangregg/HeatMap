@@ -65,6 +65,7 @@
 use strict;
 
 use Getopt::Long;
+use DateTime;
 
 # tunables
 my $titletext = "Latency Heat Map";     # centered heading
@@ -81,6 +82,7 @@ my $fontsize = 12;		# base text size
 my $boxsize = 8;		# height and width of boxes
 my $accstats = 0;		# include accumulated stats
 my $grid = 0;			# draw grid lines
+my $abs_time = 0;       # x labels in absolute time
 my $debugmsg = 0;		# print debug messages
 
 
@@ -105,6 +107,7 @@ GetOptions(
     'boxsize=i'      => \$boxsize,
     'accstats'       => \$accstats,
     'grid'           => \$grid,
+	'abs_time'       => \$abs_time,
     'debug'          => \$debugmsg
 ) or die <<USAGE_END;
 USAGE: $0 [options] infile > outfile.svg\n
@@ -315,7 +318,14 @@ if ($grid) {
 	for (my $s = 0; $s < $largest_col; $s += 10) {
 		my $x = $xpad + $s * $boxsize;
 		$im->line($x, $ybot, $x, $ytop, $grey);
-		my $slabel = ($s * $step_sec) . "s";
+		my $s_label;
+		if ($abs_time) {
+			my $s_epoch = ($start_time/$timefactor) + ($s * $step_sec);
+			my $s_datetime = DateTime->from_epoch( epoch => $s_epoch );
+			$s_label = $s_datetime;
+		} else {
+			$s_label = $s * $step_sec . "s";
+		}
 		$im->stringTTF($dgrey, $fonttype, $fontsize, 0.0, $x, $ybot + $fontsize, $slabel);
 	}
 	$im->line($xpad + ($largest_col + 1) * $boxsize, $ybot, $xpad + ($largest_col + 1) * $boxsize, $ytop, $grey);
