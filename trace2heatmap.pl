@@ -315,6 +315,7 @@ if ($grid) {
 		$im->line($xpad, $c, $xpad + ($largest_col + 1) * $boxsize, $c, $grey);
 	}
 	$im->line($xpad, $ytop, $xpad + ($largest_col + 1) * $boxsize, $ytop, $grey);
+	my $prev_date;
 	for (my $s = 0; $s < $largest_col; $s += 10) {
 		my $x = $xpad + $s * $boxsize;
 		$im->line($x, $ybot, $x, $ytop, $grey);
@@ -322,11 +323,18 @@ if ($grid) {
 		if ($abs_time) {
 			my $s_epoch = ($start_time/$timefactor) + ($s * $step_sec);
 			my $s_datetime = DateTime->from_epoch( epoch => $s_epoch );
-			$s_label = $s_datetime;
+			$s_label = $s_datetime->hms;
+
+			# print the date underneath when it changes
+			my $current_date = $s_datetime->ymd;
+			if (!defined $prev_date or $prev_date ne $current_date) {
+				$im->stringTTF($dgrey, $fonttype, $fontsize, 0.0, $x, $ybot + (2*$fontsize), $current_date);
+			}
+			$prev_date = $current_date;
 		} else {
 			$s_label = $s * $step_sec . "s";
 		}
-		$im->stringTTF($dgrey, $fonttype, $fontsize, 0.0, $x, $ybot + $fontsize, $slabel);
+		$im->stringTTF($dgrey, $fonttype, $fontsize, 0.0, $x, $ybot + $fontsize, $s_label);
 	}
 	$im->line($xpad + ($largest_col + 1) * $boxsize, $ybot, $xpad + ($largest_col + 1) * $boxsize, $ytop, $grey);
 
