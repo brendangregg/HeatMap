@@ -101,7 +101,8 @@ GetOptions(
     'fontsize=i'     => \$fontsize,
     'boxsize=i'      => \$boxsize,
     'accstats'       => \$accstats,
-    'grid'           => \$grid
+    'grid'           => \$grid,
+    'debug'          => \$debugmsg
 ) or die <<USAGE_END;
 USAGE: $0 [options] infile > outfile.svg\n
 	--title			# change title text
@@ -120,6 +121,7 @@ USAGE: $0 [options] infile > outfile.svg\n
 	--boxsize		# heat map box size in pixels (default 8)
 	--accstats		# show per-column accumulated statistics
 	--grid			# draw grid lines
+	--debug         # enable debug logging
     eg,
 	$0 --unitstime=us --unitslabel=us --minlat=2000 --maxlat=10000 \\
 	    trace.txt > heatmap.svg
