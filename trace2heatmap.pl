@@ -67,25 +67,28 @@ use strict;
 use Getopt::Long;
 
 # tunables
-my $fonttype = "Verdana";
-my $boxsize = 8;		# height and width of boxes
-my $fontsize = 12;		# base text size
 my $titletext = "Latency Heat Map";     # centered heading
-my $xaxistext = "Time";         # centered heading
-my $minwidth = 500;		# minimum x size of image
-my $rows = 50;			# number of latency rows
-my $max_col;			# max column to draw
-my $step_lat;			# instead of rows, use fixed latency step
-my $step_sec = 1;		# seconds per column
+my $units_time;			# time units (eg, "us")
+my $units_lat = "";		# latency units (eg, "us")
 my $min_lat = 0;		# min latency to include
 my $max_lat;			# max latency to include
-my $units_lat = "";		# latency units (eg, "us")
-my $units_time;			# time units (eg, "us")
+my $rows = 50;			# number of latency rows
+my $step_lat;			# instead of rows, use fixed latency step
+my $step_sec = 1;		# seconds per column
+my $max_col;			# max column to draw
+my $fonttype = "Verdana";
+my $fontsize = 12;		# base text size
+my $boxsize = 8;		# height and width of boxes
+my $accstats = 0;		# include accumulated stats
+my $grid = 0;			# draw grid lines
+my $debugmsg = 0;		# print debug messages
+
+
+my $xaxistext = "Time"; # centered heading
+my $minwidth = 500;		# minimum x size of image
 my $timefactor = 1;		# divisor for time column
 my $limit_col = 10000;		# max permitted columns
-my $debugmsg = 0;		# print debug messages
-my $grid = 0;			# draw grid lines
-my $accstats = 0;		# include accumulated stats
+
 
 GetOptions(
 	'title=s'        => \$titletext,
