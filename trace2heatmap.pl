@@ -303,8 +303,38 @@ $im->stringTTF($black, $fonttype, $fontsize + 5, 0.0, int($imagewidth / 2), $fon
 $im->stringTTF($black, $fonttype, $fontsize, 0.0, int($imagewidth / 2), $imageheight - $fontsize - 1, $xaxistext);
 $im->stringTTF($black, $fonttype, $fontsize, 0.0, $xpad, $imageheight - (2.5 * $fontsize), " ", "", 'id="details"');
 
-# Draw grid lines
 my $largest_row = int(($max_lat - $min_lat) / $step_lat);
+
+# Draw boxes
+debug "Writing SVG.\n";
+for (my $s = 0; $s < $largest_col; $s++) {
+	my $acc = 0;
+	my $total = 0;
+	for (my $l = 0; $l < $largest_row; $l++) {
+		my $c = $map[$s][$l];
+		next unless defined $c;
+		$total += $c;
+	}
+	for (my $l = 0; $l < $largest_row; $l++) {
+		my $c = $map[$s][$l];
+		$c = 0 unless defined $c;
+		next if $c == 0;
+		$acc += $c;
+		my $color = color("linear", $c / $largest_count);
+		my $x1 = $xpad + $s * $boxsize;
+		my $x2 = $x1 + $boxsize;
+		my $y1 = $imageheight - ($ypad2 + $l * $boxsize);
+		my $y2 = $y1 + $boxsize;
+		my $lr = ($min_lat + $l * $step_lat) . "-" .
+		    ($min_lat + (($l + 1) * $step_lat)) . $units_lat;
+		my $tr = $s * $step_sec;
+		$tr .= "-" . ($s * $step_sec - 1 + $step_sec) if $step_sec > 1;
+		$im->filledRectangle($x1, $y1, $x2, $y2, $color,
+		    'onmouseover="s(' . "'$tr','$lr',$c,$acc,$total" . ')" onmouseout="c()"');
+	}
+}
+
+# Draw grid lines
 my ($ytop, $ybot);
 if ($grid) {
 	$ytop = $imageheight - ($ypad2 + ($largest_row+1) * $boxsize - $boxsize);
@@ -340,34 +370,6 @@ if ($grid) {
 
 }
 
-# Draw boxes
-debug "Writing SVG.\n";
-for (my $s = 0; $s < $largest_col; $s++) {
-	my $acc = 0;
-	my $total = 0;
-	for (my $l = 0; $l < $largest_row; $l++) {
-		my $c = $map[$s][$l];
-		next unless defined $c;
-		$total += $c;
-	}
-	for (my $l = 0; $l < $largest_row; $l++) {
-		my $c = $map[$s][$l];
-		$c = 0 unless defined $c;
-		next if $c == 0;
-		$acc += $c;
-		my $color = color("linear", $c / $largest_count);
-		my $x1 = $xpad + $s * $boxsize;
-		my $x2 = $x1 + $boxsize;
-		my $y1 = $imageheight - ($ypad2 + $l * $boxsize);
-		my $y2 = $y1 + $boxsize;
-		my $lr = ($min_lat + $l * $step_lat) . "-" .
-		    ($min_lat + (($l + 1) * $step_lat)) . $units_lat;
-		my $tr = $s * $step_sec;
-		$tr .= "-" . ($s * $step_sec - 1 + $step_sec) if $step_sec > 1;
-		$im->filledRectangle($x1, $y1, $x2, $y2, $color,
-		    'onmouseover="s(' . "'$tr','$lr',$c,$acc,$total" . ')" onmouseout="c()"');
-	}
-}
 
 if ($grid) {
 	$im->stringTTF($vvdgrey, $fonttype, $fontsize, 0.0, $xpad + 5, $ybot - $fontsize + 4, $min_lat . $units_lat);
